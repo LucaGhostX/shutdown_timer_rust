@@ -142,10 +142,15 @@ jobs:
           cp target/release/shutdown_timer AppDir/usr/bin/shutdown_timer
           chmod +x AppDir/usr/bin/shutdown_timer
 
-          cp installer/linux/io.github.lucag.ShutdownTimer.desktop AppDir/usr/share/applications/
-          cp installer/linux/io.github.lucag.ShutdownTimer.desktop AppDir/shutdown_timer.desktop
+          # Copy desktop files
+          cp installer/linux/io.github.lucag.ShutdownTimer.desktop AppDir/io.github.lucag.ShutdownTimer.desktop
+          cp installer/linux/io.github.lucag.ShutdownTimer.desktop AppDir/usr/share/applications/io.github.lucag.ShutdownTimer.desktop
+
+          # Copy icons matching the desktop file Icon=io.github.lucag.ShutdownTimer
+          cp assets/power_icon.png AppDir/io.github.lucag.ShutdownTimer.png
           cp assets/power_icon.png AppDir/usr/share/icons/hicolor/256x256/apps/io.github.lucag.ShutdownTimer.png
-          cp assets/power_icon.png AppDir/shutdown_timer.png
+          cp assets/power_icon.png AppDir/.DirIcon
+
           ln -s usr/bin/shutdown_timer AppDir/AppRun
 
           wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
@@ -165,12 +170,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Flatpak and Builder
+      - name: Install system build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder elfutils
+          sudo apt-get install -y libx11-dev libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev flatpak flatpak-builder elfutils
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Setup Flatpak runtime
+        run: |
           flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-          flatpak install --user -y flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08 org.freedesktop.Sdk.Extension.rust-stable//24.08
+          flatpak install --user -y flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08
 
       - name: Build Flatpak Bundle
         run: |

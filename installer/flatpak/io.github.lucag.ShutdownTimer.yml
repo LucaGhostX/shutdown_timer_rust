@@ -2,8 +2,6 @@ app-id: io.github.lucag.ShutdownTimer
 runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
-sdk-extensions:
-  - org.freedesktop.Sdk.Extension.rust-stable
 command: shutdown_timer
 
 finish-args:
@@ -13,23 +11,21 @@ finish-args:
   - --device=dri
   - --system-talk-name=org.freedesktop.login1
 
-build-options:
-  append-path: /usr/lib/sdk/rust-stable/bin
-  env:
-    CARGO_HOME: /run/build/shutdown_timer/cargo
-
 modules:
   - name: shutdown_timer
     buildsystem: simple
-    build-options:
-      build-args:
-        - --share=network
     build-commands:
-      - cargo build --release
-      - install -Dm755 target/release/shutdown_timer /app/bin/shutdown_timer
-      - install -Dm644 installer/linux/io.github.lucag.ShutdownTimer.desktop /app/share/applications/io.github.lucag.ShutdownTimer.desktop
-      - install -Dm644 assets/power_icon.png /app/share/icons/hicolor/256x256/apps/io.github.lucag.ShutdownTimer.png
-      - install -Dm644 installer/linux/io.github.lucag.ShutdownTimer.metainfo.xml /app/share/metainfo/io.github.lucag.ShutdownTimer.metainfo.xml
+      - install -Dm755 shutdown_timer /app/bin/shutdown_timer
+      - install -Dm644 io.github.lucag.ShutdownTimer.desktop /app/share/applications/io.github.lucag.ShutdownTimer.desktop
+      - install -Dm644 power_icon.png /app/share/icons/hicolor/256x256/apps/io.github.lucag.ShutdownTimer.png
+      - install -Dm644 io.github.lucag.ShutdownTimer.metainfo.xml /app/share/metainfo/io.github.lucag.ShutdownTimer.metainfo.xml
     sources:
-      - type: dir
-        path: ../..
+      - type: file
+        path: ../../target/release/shutdown_timer
+      - type: file
+        path: ../../installer/linux/io.github.lucag.ShutdownTimer.desktop
+      - type: file
+        path: ../../assets/power_icon.png
+      - type: file
+        path: ../../installer/linux/io.github.lucag.ShutdownTimer.metainfo.xml
+

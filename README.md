@@ -128,5 +128,13 @@ shutdown_timer_rust/
 │   ├── theme.rs                     # Gestione palette e tema Dark/Light/Auto
 │   └── timer.rs                     # Motore del conto alla rovescia
 ├── Cargo.toml                       # Configurazione dipendenze Rust
+├── LICENSE                          # Licenza MIT
 └── README.md
 ```
+
+---
+
+## 📄 Licenza
+
+Questo progetto è rilasciato sotto licenza **MIT**. Consulta il file [`LICENSE`](LICENSE) per il testo completo dei termini e condizioni.
+

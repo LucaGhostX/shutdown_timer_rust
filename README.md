@@ -1,16 +1,18 @@
 # Shutdown Timer (Rust Version) 2.4
 
+**English** | [Italiano](README.it.md) | [Français](README.fr.md) | [Español](README.es.md) | [中文](README.zh.md)
+
 [![Vibecoded](https://img.shields.io/badge/development-vibecoded-ff69b4?style=flat-square)](https://github.com/LucaGhostX/shutdown_timer_rust)
 [![Rust](https://img.shields.io/badge/rust-2021-orange?style=flat-square&logo=rust)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-> **Nota**: Questo porting in Rust è stato completamente **vibecoded** a partire dal progetto originale [**shutdown_timer**](https://github.com/LucaGhostX/shutdown_timer) (sviluppato originariamente in Python/CustomTkinter).
+> **Note**: This Rust port was completely **vibecoded** from the original project [**shutdown_timer**](https://github.com/LucaGhostX/shutdown_timer) (originally developed in Python/CustomTkinter).
 
-Un timer per lo spegnimento programmato del computer compatto, moderno e reattivo, con interfaccia grafica Dark/Light Mode nativa, supporto multilingua, compatibilità multipiattaforma (**Windows**, **macOS**, **Linux**) e prevenzione intelligente della sospensione.
+A compact, modern, and responsive scheduled computer shutdown timer, featuring a native Dark/Light Mode GUI, multilingual support, cross-platform compatibility (**Windows**, **macOS**, **Linux**), and smart sleep prevention.
 
 ---
 
-## Screenshot
+## Screenshots
 
 ![english (Personalizzato)](https://user-images.githubusercontent.com/64761832/210807640-a37306bb-3599-416f-9863-6f5b32117d58.png)
 ![italian (Personalizzato)](https://user-images.githubusercontent.com/64761832/210807707-e8c55222-fae6-4193-8b74-d32b1916ab25.png)
@@ -21,70 +23,70 @@ Un timer per lo spegnimento programmato del computer compatto, moderno e reattiv
 
 ---
 
-## Caratteristiche
+## Features
 
-1. **Prestazioni e Reattività**:
-   - Compilato in codice macchina nativo con Rust ed `eframe`/`egui`.
-   - Eseguibile singolo autonomo, avvio istantaneo e consumo di memoria minimo (< 30 MB).
-   - Nessuna dipendenza esterna da Python o runtime pesanti.
+1. **Performance and Responsiveness**:
+   - Compiled to native machine code with Rust and `eframe`/`egui`.
+   - Standalone single executable, instant startup, minimal memory consumption (< 30 MB).
+   - No external dependency on Python or heavy runtimes.
 
-2. **Pannello Impostazioni e Temi**:
-   - Icona a ingranaggio in basso a destra per accedere al pannello impostazioni rapido.
-   - **Switch Tema**: Scelta immediata tra:
-     - **Scuro** (*Dark Mode*)
-     - **Chiaro** (*Light Mode*)
-     - **Sistema** (*Auto* - segue le preferenze dell'OS)
-   - **Supporto Multilingua (i18n)**:
-     - Inglese (`en`)
-     - Italiano (`it`)
-     - Francese (`fr`)
-     - Spagnolo (`sp`)
-     - Cinese (`ch`)
-     - Rilevamento automatico della lingua di sistema al primo avvio.
+2. **Settings Panel and Themes**:
+   - Gear icon at the bottom-right corner to open the quick settings modal.
+   - **Theme Switch**: Quick toggle between:
+     - **Dark** (*Dark Mode*)
+     - **Light** (*Light Mode*)
+     - **System** (*Auto* - follows OS preferences)
+   - **Multilingual Support (i18n)**:
+     - English (`en`)
+     - Italian (`it`)
+     - French (`fr`)
+     - Spanish (`sp`)
+     - Chinese (`ch`)
+     - Automatic system language detection on first run.
 
-3. **Modalità Ibrida Portable & Installato**:
-   - Di default non viene creato alcun file di configurazione (zero footprint).
-   - Se l'utente modifica lingua o tema dal pannello impostazioni, viene generato `config.json`.
-   - In modalità **Portable** (o con file `portable.txt`), `config.json` viene salvato nella cartella dell'eseguibile.
-   - In modalità **Installata**, `config.json` viene salvato nei percorsi utente standard:
+3. **Hybrid Portable & Installed Mode**:
+   - Zero footprint by default (no configuration file is created initially).
+   - Once the user changes language or theme in settings, `config.json` is generated.
+   - In **Portable** mode (or if `portable.txt` exists), `config.json` is saved in the application directory.
+   - In **Installed** mode, `config.json` is saved in standard user directories:
      - **Windows**: `%APPDATA%\ShutdownTimer\config.json`
      - **macOS**: `~/Library/Application Support/ShutdownTimer/config.json`
-     - **Linux**: `$XDG_CONFIG_HOME/ShutdownTimer/config.json` o `~/.config/ShutdownTimer/config.json`
+     - **Linux**: `$XDG_CONFIG_HOME/ShutdownTimer/config.json` or `~/.config/ShutdownTimer/config.json`
 
-4. **Integrazione Nativa Multipiattaforma**:
+4. **Native Cross-Platform Integration**:
    - **Windows**:
-     - Prevenzione automatica della sospensione del PC e del display tramite `SetThreadExecutionState` e `PowerCreateRequest`.
-     - Arresto del sistema tramite `shutdown /s /t <sec>` e cancellazione con `shutdown /a`.
-     - Rilevamento automatico del tema Dark dal registro di Windows.
+     - Automatic PC and display sleep prevention via `SetThreadExecutionState` and `PowerCreateRequest`.
+     - System shutdown via `shutdown /s /t <sec>` and abort with `shutdown /a`.
+     - Automatic Dark Mode detection from the Windows Registry.
    - **macOS**:
-     - Prevenzione dello sleep tramite il tool nativo `caffeinate`.
-     - Arresto sicuro a livello utente via AppleScript (`osascript` con `System Events`), senza necessità di permessi di root o sudo.
-     - Rilevamento lingua tramite `defaults read -g AppleLocale`.
+     - Sleep prevention using the native `caffeinate` utility.
+     - Safe user-level shutdown via AppleScript (`osascript` with `System Events`), without requiring root or sudo permissions.
+     - System language detection via `defaults read -g AppleLocale`.
    - **Linux**:
-     - Inibizione dello standby tramite `systemd-inhibit`.
-     - Arresto programmato con cancellazione tramite `systemctl poweroff` / `shutdown`.
-     - Rilevamento tema Dark Mode tramite impostazioni GNOME/freedesktop.
+     - Standby inhibition via `systemd-inhibit`.
+     - Scheduled shutdown with abort support via `systemctl poweroff` / `shutdown`.
+     - Dark Mode detection from GNOME/freedesktop settings.
 
-5. **Controlli Timer Intuitivi**:
-   - 3 Spinbox regolabili per Ore (0-99), Minuti (0-59) e Secondi (0-59).
-   - Pulsanti rapidi `+` e `-` con wrap-around circolare e casella di testo modificabile direttamente.
-   - Grande display digitale del conto alla rovescia in formato `HH:MM:SS`.
-   - Pulsanti **Avvia** (*Start*), **Pausa** (*Pause*), **Riprendi** (*Resume*) e **Ripristina** (*Reset*).
+5. **Intuitive Timer Controls**:
+   - 3 adjustable spinboxes for Hours (0-99), Minutes (0-59), and Seconds (0-59).
+   - Quick `+` and `-` buttons with circular wrap-around and directly editable text field.
+   - Large digital countdown display in `HH:MM:SS` format.
+   - **Start**, **Pause**, **Resume**, and **Reset** buttons.
 
-6. **Protezione e Modali di Conferma**:
-   - Finestra modale di errore se si tenta di avviare il timer con valore zero.
-   - Conferma di ripristino (*Reset*) per evitare azzeramenti accidentali.
-   - Intercettazione della chiusura della finestra `[X]` se il timer è in esecuzione con conferma di uscita.
+6. **Safety and Confirmation Modals**:
+   - Error modal when attempting to start a timer with zero duration.
+   - Confirmation modal on **Reset** to avoid accidental cancellations.
+   - Window close interception `[X]` when a timer is running with an exit confirmation dialog.
 
 ---
 
-## Compilazione e Packaging con GitHub Actions
+## Build and Packaging with GitHub Actions
 
-Il repository include un flusso di lavoro completo in [`.github/workflows/build-and-release.yml`](.github/workflows/build-and-release.yml) che compila automaticamente tutti i formati a ogni push su tag di rilascio (`v*`) o manualmente tramite *Run workflow*:
+The repository includes a complete automated CI/CD workflow in [`.github/workflows/build-and-release.yml`](.github/workflows/build-and-release.yml) that automatically builds all release formats on every tag push (`v*`) or manually via *Run workflow*:
 
-| Piattaforma | Formato Pacchetto | Artefatto generato |
+| Platform | Package Format | Generated Artifact |
 | :--- | :--- | :--- |
-| **Windows** | **Portable** (Zip autonomo) | `ShutdownTimer-Windows-Portable.zip` |
+| **Windows** | **Portable** (Standalone Zip) | `ShutdownTimer-Windows-Portable.zip` |
 | **Windows** | **Installer** (Inno Setup) | `ShutdownTimer-Windows-Setup.exe` |
 | **macOS** | **Apple Disk Image & Bundle** | `ShutdownTimer-macOS.dmg`, `.tar.gz` |
 | **Linux** | **AppImage** | `ShutdownTimer-x86_64.AppImage` |
@@ -92,24 +94,24 @@ Il repository include un flusso di lavoro completo in [`.github/workflows/build-
 
 ---
 
-## Compilazione Locale
+## Local Compilation
 
-### Prerequisiti
-- **Rust & Cargo** (installabile tramite [rustup.rs](https://rustup.rs))
+### Prerequisites
+- **Rust & Cargo** (installable via [rustup.rs](https://rustup.rs))
 
-### Compilazione Release:
+### Release Build:
 ```bash
 cargo build --release
 ```
 
-### Esecuzione Test:
+### Run Tests:
 ```bash
 cargo test
 ```
 
 ---
 
-## Struttura del Progetto
+## Project Structure
 
 ```
 shutdown_timer_rust/
@@ -117,40 +119,38 @@ shutdown_timer_rust/
 │   └── workflows/
 │       └── build-and-release.yml    # CI/CD GitHub Actions (Windows, macOS, AppImage, Flatpak)
 ├── assets/
-│   ├── GFSNeohellenic-Bold.ttf      # Font incorporato
-│   ├── power.ico                    # Icona applicazione (Windows)
-│   ├── power_icon.png               # Icona finestra (multipiattaforma)
-│   ├── settings_icon.png            # Icona ingranaggio per Dark Mode
-│   ├── settings_icon_dark.png       # Icona ingranaggio per Light Mode
-│   └── shutdown_timer_logo.png      # Logo integrato
+│   ├── GFSNeohellenic-Bold.ttf      # Embedded font
+│   ├── power.ico                    # Application icon (Windows)
+│   ├── power_icon.png               # Window icon (cross-platform)
+│   ├── settings_icon.png            # Gear icon for Dark Mode
+│   ├── settings_icon_dark.png       # Gear icon for Light Mode
+│   └── shutdown_timer_logo.png      # Integrated logo
 ├── installer/
 │   ├── flatpak/
-│   │   └── io.github.lucag.ShutdownTimer.yml  # Manifest Flatpak
+│   │   └── io.github.lucag.ShutdownTimer.yml  # Flatpak Manifest
 │   ├── linux/
 │   │   ├── io.github.lucag.ShutdownTimer.desktop
 │   │   └── io.github.lucag.ShutdownTimer.metainfo.xml
 │   ├── macos/
-│   │   └── Info.plist               # Configurazione App Bundle macOS
+│   │   └── Info.plist               # macOS App Bundle configuration
 │   └── windows/
-│       └── setup.iss                # Script Inno Setup per Windows Installer
+│       └── setup.iss                # Inno Setup script for Windows Installer
 ├── src/
-│   ├── main.rs                      # Entry point, configurazione finestra e font
-│   ├── app.rs                       # Logica applicativa, interfaccia utente e modale impostazioni
-│   ├── spinbox.rs                   # Widget Spinbox per ore, minuti e secondi
-│   ├── config.rs                    # Gestione configurazione ibrida (Portable / System)
-│   ├── i18n.rs                      # Gestione traduzioni e rilevamento lingua di sistema
-│   ├── platform.rs                  # Astrazione nativa multipiattaforma (Windows, macOS, Linux)
-│   ├── theme.rs                     # Gestione palette e tema Dark/Light/Auto
-│   └── timer.rs                     # Motore del conto alla rovescia
-├── Cargo.toml                       # Configurazione dipendenze Rust
-├── LICENSE                          # Licenza MIT
+│   ├── main.rs                      # Entry point, window setup and font loading
+│   ├── app.rs                       # Application logic, UI and settings modal
+│   ├── spinbox.rs                   # Spinbox widget for hours, minutes, seconds
+│   ├── config.rs                    # Hybrid configuration (Portable / System)
+│   ├── i18n.rs                      # Translation management and system locale detection
+│   ├── platform.rs                  # Native cross-platform abstraction (Windows, macOS, Linux)
+│   ├── theme.rs                     # Palette management and Dark/Light/Auto theme
+│   └── timer.rs                     # Countdown timer engine
+├── Cargo.toml                       # Rust package manifest
+├── LICENSE                          # MIT License
 └── README.md
 ```
 
 ---
 
-## Licenza
+## License
 
-Questo progetto è rilasciato sotto licenza **MIT**. Consulta il file [`LICENSE`](LICENSE) per il testo completo dei termini e condizioni.
-
-
+This project is licensed under the **MIT** License. See the [`LICENSE`](LICENSE) file for the full terms and conditions.

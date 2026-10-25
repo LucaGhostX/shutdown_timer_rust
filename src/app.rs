@@ -201,21 +201,21 @@ impl ShutdownTimerApp {
                             ui.radio_value(
                                 &mut self.temp_selected_theme,
                                 ThemeMode::Dark,
-                                RichText::new(format!("🌙 {}", texts.theme_dark))
+                                RichText::new(texts.theme_dark)
                                     .size(14.0)
                                     .color(theme.modal_text()),
                             );
                             ui.radio_value(
                                 &mut self.temp_selected_theme,
                                 ThemeMode::Light,
-                                RichText::new(format!("☀️ {}", texts.theme_light))
+                                RichText::new(texts.theme_light)
                                     .size(14.0)
                                     .color(theme.modal_text()),
                             );
                             ui.radio_value(
                                 &mut self.temp_selected_theme,
                                 ThemeMode::Auto,
-                                RichText::new(format!("💻 {}", texts.theme_auto))
+                                RichText::new(texts.theme_auto)
                                     .size(14.0)
                                     .color(theme.modal_text()),
                             );

@@ -4,31 +4,31 @@
 [![Rust](https://img.shields.io/badge/rust-2021-orange?style=flat-square&logo=rust)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-> ✨ **Nota**: Questo porting in Rust è stato completamente **vibecoded** a partire dal progetto originale [**shutdown_timer**](https://github.com/LucaGhostX/shutdown_timer) (sviluppato originariamente in Python/CustomTkinter).
+> **Nota**: Questo porting in Rust è stato completamente **vibecoded** a partire dal progetto originale [**shutdown_timer**](https://github.com/LucaGhostX/shutdown_timer) (sviluppato originariamente in Python/CustomTkinter).
 
 Un timer per lo spegnimento programmato del computer compatto, moderno e reattivo, con interfaccia grafica Dark/Light Mode nativa, supporto multilingua, compatibilità multipiattaforma (**Windows**, **macOS**, **Linux**) e prevenzione intelligente della sospensione.
 
 ---
 
-## 🚀 Caratteristiche
+## Caratteristiche
 
 1. **Prestazioni e Reattività**:
    - Compilato in codice macchina nativo con Rust ed `eframe`/`egui`.
    - Eseguibile singolo autonomo, avvio istantaneo e consumo di memoria minimo (< 30 MB).
    - Nessuna dipendenza esterna da Python o runtime pesanti.
 
-2. **Pannello Impostazioni (Ingranaggio ⚙) e Temi**:
+2. **Pannello Impostazioni e Temi**:
    - Icona a ingranaggio in basso a destra per accedere al pannello impostazioni rapido.
    - **Switch Tema**: Scelta immediata tra:
-     - 🌙 **Scuro** (*Dark Mode*)
-     - ☀️ **Chiaro** (*Light Mode*)
-     - 💻 **Sistema** (*Auto* - segue le preferenze dell'OS)
+     - **Scuro** (*Dark Mode*)
+     - **Chiaro** (*Light Mode*)
+     - **Sistema** (*Auto* - segue le preferenze dell'OS)
    - **Supporto Multilingua (i18n)**:
-     - 🇬🇧 Inglese (`en`)
-     - 🇮🇹 Italiano (`it`)
-     - 🇫🇷 Francese (`fr`)
-     - 🇪🇸 Spagnolo (`sp`)
-     - 🇨🇳 Cinese (`ch`)
+     - Inglese (`en`)
+     - Italiano (`it`)
+     - Francese (`fr`)
+     - Spagnolo (`sp`)
+     - Cinese (`ch`)
      - Rilevamento automatico della lingua di sistema al primo avvio.
 
 3. **Modalità Ibrida Portable & Installato**:
@@ -67,7 +67,7 @@ Un timer per lo spegnimento programmato del computer compatto, moderno e reattiv
 
 ---
 
-## 📦 Compilazione e Packaging con GitHub Actions
+## Compilazione e Packaging con GitHub Actions
 
 Il repository include un flusso di lavoro completo in [`.github/workflows/build-and-release.yml`](.github/workflows/build-and-release.yml) che compila automaticamente tutti i formati a ogni push su tag di rilascio (`v*`) o manualmente tramite *Run workflow*:
 
@@ -81,7 +81,7 @@ Il repository include un flusso di lavoro completo in [`.github/workflows/build-
 
 ---
 
-## 🛠️ Compilazione Locale
+## Compilazione Locale
 
 ### Prerequisiti
 - **Rust & Cargo** (installabile tramite [rustup.rs](https://rustup.rs))
@@ -98,7 +98,7 @@ cargo test
 
 ---
 
-## 📂 Struttura del Progetto
+## Struttura del Progetto
 
 ```
 shutdown_timer_rust/
@@ -138,7 +138,8 @@ shutdown_timer_rust/
 
 ---
 
-## 📄 Licenza
+## Licenza
 
 Questo progetto è rilasciato sotto licenza **MIT**. Consulta il file [`LICENSE`](LICENSE) per il testo completo dei termini e condizioni.
+
 

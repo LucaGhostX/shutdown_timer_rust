@@ -1,0 +1,218 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows-build:
+    name: Windows (Portable & Installer)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Package Windows Portable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          New-Item -ItemType Directory -Path dist\portable\ShutdownTimer -Force | Out-Null
+          Copy-Item target\release\shutdown_timer.exe dist\portable\ShutdownTimer\
+          Copy-Item README.md dist\portable\ShutdownTimer\
+          New-Item -ItemType File -Path dist\portable\ShutdownTimer\portable.txt -Force | Out-Null
+          Compress-Archive -Path dist\portable\ShutdownTimer -DestinationPath dist\ShutdownTimer-Windows-Portable.zip -Force
+
+      - name: Build Windows Installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y
+            $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          }
+          & $iscc installer\windows\setup.iss
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-binaries
+          path: |
+            dist/ShutdownTimer-Windows-Portable.zip
+            dist/ShutdownTimer-Windows-Setup.exe
+
+  macos-build:
+    name: macOS (DMG & Tarball)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Create macOS App Bundle and DMG
+        run: |
+          mkdir -p "dist/Shutdown Timer.app/Contents/MacOS"
+          mkdir -p "dist/Shutdown Timer.app/Contents/Resources"
+          cp target/release/shutdown_timer "dist/Shutdown Timer.app/Contents/MacOS/shutdown_timer"
+          chmod +x "dist/Shutdown Timer.app/Contents/MacOS/shutdown_timer"
+          cp installer/macos/Info.plist "dist/Shutdown Timer.app/Contents/Info.plist"
+          
+          # Generate ICNS icon from png if sips and iconutil are available
+          mkdir -p AppIcon.iconset
+          sips -z 16 16     assets/power_icon.png --out AppIcon.iconset/icon_16x16.png || true
+          sips -z 32 32     assets/power_icon.png --out AppIcon.iconset/icon_16x16@2x.png || true
+          sips -z 32 32     assets/power_icon.png --out AppIcon.iconset/icon_32x32.png || true
+          sips -z 64 64     assets/power_icon.png --out AppIcon.iconset/icon_32x32@2x.png || true
+          sips -z 128 128   assets/power_icon.png --out AppIcon.iconset/icon_128x128.png || true
+          sips -z 256 256   assets/power_icon.png --out AppIcon.iconset/icon_128x128@2x.png || true
+          sips -z 256 256   assets/power_icon.png --out AppIcon.iconset/icon_256x256.png || true
+          sips -z 512 512   assets/power_icon.png --out AppIcon.iconset/icon_256x256@2x.png || true
+          iconutil -c icns AppIcon.iconset -o "dist/Shutdown Timer.app/Contents/Resources/AppIcon.icns" || true
+          
+          # Create DMG
+          hdiutil create -volname "Shutdown Timer" -srcfolder "dist/Shutdown Timer.app" -ov -format UDZO dist/ShutdownTimer-macOS.dmg
+          
+          # Create Tarball
+          cd dist && tar -czvf ShutdownTimer-macOS.tar.gz "Shutdown Timer.app"
+
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-binaries
+          path: |
+            dist/ShutdownTimer-macOS.dmg
+            dist/ShutdownTimer-macOS.tar.gz
+
+  linux-appimage:
+    name: Linux AppImage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev file
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Build AppImage
+        run: |
+          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/share/applications
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+          mkdir -p dist
+
+          cp target/release/shutdown_timer AppDir/usr/bin/shutdown_timer
+          chmod +x AppDir/usr/bin/shutdown_timer
+
+          cp installer/linux/io.github.lucag.ShutdownTimer.desktop AppDir/usr/share/applications/
+          cp installer/linux/io.github.lucag.ShutdownTimer.desktop AppDir/shutdown_timer.desktop
+          cp assets/power_icon.png AppDir/usr/share/icons/hicolor/256x256/apps/io.github.lucag.ShutdownTimer.png
+          cp assets/power_icon.png AppDir/shutdown_timer.png
+          ln -s usr/bin/shutdown_timer AppDir/AppRun
+
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          chmod +x appimagetool
+          ARCH=x86_64 ./appimagetool --appimage-extract-and-run AppDir dist/ShutdownTimer-x86_64.AppImage
+
+      - name: Upload AppImage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage
+          path: dist/ShutdownTimer-x86_64.AppImage
+
+  linux-flatpak:
+    name: Linux Flatpak
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Flatpak and Builder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder elfutils
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08 org.freedesktop.Sdk.Extension.rust-stable//24.08
+
+      - name: Build Flatpak Bundle
+        run: |
+          mkdir -p build-dir repo dist
+          flatpak-builder --user --repo=repo --force-clean build-dir installer/flatpak/io.github.lucag.ShutdownTimer.yml
+          flatpak build-bundle repo dist/ShutdownTimer.flatpak io.github.lucag.ShutdownTimer
+
+      - name: Upload Flatpak Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-flatpak
+          path: dist/ShutdownTimer.flatpak
+
+  release:
+    name: Publish GitHub Release
+    needs: [windows-build, macos-build, linux-appimage, linux-flatpak]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p final-assets
+          find release-artifacts/ -type f -name "*.zip" -exec cp {} final-assets/ \;
+          find release-artifacts/ -type f -name "*.exe" -exec cp {} final-assets/ \;
+          find release-artifacts/ -type f -name "*.dmg" -exec cp {} final-assets/ \;
+          find release-artifacts/ -type f -name "*.tar.gz" -exec cp {} final-assets/ \;
+          find release-artifacts/ -type f -name "*.AppImage" -exec cp {} final-assets/ \;
+          find release-artifacts/ -type f -name "*.flatpak" -exec cp {} final-assets/ \;
+          ls -la final-assets/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: final-assets/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false

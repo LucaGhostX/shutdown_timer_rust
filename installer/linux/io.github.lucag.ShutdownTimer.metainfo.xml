@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.lucag.ShutdownTimer</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Shutdown Timer</name>
+  <summary>A native, fast shutdown timer written in Rust</summary>
+  <description>
+    <p>
+      Shutdown Timer is a modern, responsive shutdown timer with a Dark Mode UI,
+      sleep prevention, and multilingual support for English, Italian, French, Spanish, and Chinese.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.lucag.ShutdownTimer.desktop</launchable>
+  <provides>
+    <binary>shutdown_timer</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="2.4.0" date="2026-10-25"/>
+  </releases>
+</component>

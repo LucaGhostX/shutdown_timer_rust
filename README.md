@@ -1,6 +1,10 @@
 # Shutdown Timer (Rust Version) 2.4
 
-Port ad alte prestazioni in **Rust** del progetto originale [**shutdown_timer**](https://github.com/LucaGhostX/shutdown_timer) (sviluppato originariamente in Python/CustomTkinter).
+[![Vibecoded](https://img.shields.io/badge/development-vibecoded-ff69b4?style=flat-square)](https://github.com/LucaGhostX/shutdown_timer_rust)
+[![Rust](https://img.shields.io/badge/rust-2021-orange?style=flat-square&logo=rust)](https://www.rust-lang.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+
+> ✨ **Nota**: Questo porting in Rust è stato completamente **vibecoded** a partire dal progetto originale [**shutdown_timer**](https://github.com/LucaGhostX/shutdown_timer) (sviluppato originariamente in Python/CustomTkinter).
 
 Un timer per lo spegnimento programmato del computer compatto, moderno e reattivo, con interfaccia grafica Dark/Light Mode nativa, supporto multilingua, compatibilità multipiattaforma (**Windows**, **macOS**, **Linux**) e prevenzione intelligente della sospensione.
 

@@ -2,7 +2,7 @@
 name = "shutdown_timer"
 version = "2.4.0"
 edition = "2021"
-description = "A fast, native shutdown timer in Rust (port of https://github.com/LucaGhostX/shutdown_timer)"
+description = "A fast, native shutdown timer in Rust (vibecoded port of https://github.com/LucaGhostX/shutdown_timer)"
 license = "MIT"
 authors = ["LucaGhostX"]
 repository = "https://github.com/LucaGhostX/shutdown_timer_rust"

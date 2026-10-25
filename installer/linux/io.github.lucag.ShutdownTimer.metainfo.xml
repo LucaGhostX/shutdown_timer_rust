@@ -9,6 +9,7 @@
     <p>
       Shutdown Timer is a modern, responsive shutdown timer with a Dark Mode UI,
       sleep prevention, and multilingual support for English, Italian, French, Spanish, and Chinese.
+      High-performance Rust port of https://github.com/LucaGhostX/shutdown_timer.
     </p>
   </description>
   <launchable type="desktop-id">io.github.lucag.ShutdownTimer.desktop</launchable>

@@ -1,6 +1,6 @@
 # Shutdown Timer (Rust Version) 2.4
 
-Riscrittura ad alte prestazioni in **Rust** del programma **Shutdown Timer** (originariamente sviluppato in Python/CustomTkinter).
+Port ad alte prestazioni in **Rust** del progetto originale [**shutdown_timer**](https://github.com/LucaGhostX/shutdown_timer) (sviluppato originariamente in Python/CustomTkinter).
 
 Un timer per lo spegnimento programmato del computer compatto, moderno e reattivo, con interfaccia grafica Dark/Light Mode nativa, supporto multilingua, compatibilità multipiattaforma (**Windows**, **macOS**, **Linux**) e prevenzione intelligente della sospensione.
 

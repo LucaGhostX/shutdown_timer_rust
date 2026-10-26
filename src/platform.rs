@@ -34,6 +34,35 @@ mod imp {
     const MUI_LANGUAGE_NAME: u32 = 0x08;
     const LOCALE_NAME_MAX_LENGTH: usize = 85;
 
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    struct Luid {
+        low_part: u32,
+        high_part: i32,
+    }
+
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    struct LuidAndAttributes {
+        luid: Luid,
+        attributes: u32,
+    }
+
+    #[repr(C)]
+    struct TokenPrivileges {
+        privilege_count: u32,
+        privileges: [LuidAndAttributes; 1],
+    }
+
+    const TOKEN_ADJUST_PRIVILEGES: u32 = 0x0020;
+    const TOKEN_QUERY: u32 = 0x0008;
+    const SE_PRIVILEGE_ENABLED: u32 = 0x0000_0002;
+    const ERROR_SHUTDOWN_NOT_IN_PROGRESS: u32 = 1116;
+
+    const SHTDN_REASON_MAJOR_OTHER: u32 = 0x0000_0000;
+    const SHTDN_REASON_MINOR_OTHER: u32 = 0x0000_0000;
+    const SHTDN_REASON_FLAG_PLANNED: u32 = 0x4000_0000;
+
     #[link(name = "kernel32")]
     extern "system" {
         fn SetThreadExecutionState(es_flags: u32) -> u32;
@@ -51,6 +80,8 @@ mod imp {
             lp_locale_name: *mut u16,
             cch_locale_name: i32,
         ) -> i32;
+        fn GetCurrentProcess() -> isize;
+        fn GetLastError() -> u32;
     }
 
     #[link(name = "advapi32")]
@@ -73,12 +104,94 @@ mod imp {
         ) -> i32;
 
         fn RegCloseKey(h_key: isize) -> i32;
+
+        fn OpenProcessToken(
+            process_handle: isize,
+            desired_access: u32,
+            token_handle: *mut isize,
+        ) -> i32;
+
+        fn LookupPrivilegeValueW(
+            lp_system_name: *const u16,
+            lp_name: *const u16,
+            lp_luid: *mut Luid,
+        ) -> i32;
+
+        fn AdjustTokenPrivileges(
+            token_handle: isize,
+            disable_all_privileges: i32,
+            new_state: *const TokenPrivileges,
+            buffer_length: u32,
+            previous_state: *mut TokenPrivileges,
+            return_length: *mut u32,
+        ) -> i32;
+
+        fn InitiateSystemShutdownExW(
+            lp_machine_name: *const u16,
+            lp_message: *const u16,
+            dw_timeout: u32,
+            b_force_apps_closed: i32,
+            b_reboot_after_shutdown: i32,
+            dw_reason: u32,
+        ) -> i32;
+
+        fn AbortSystemShutdownW(
+            lp_machine_name: *const u16,
+        ) -> i32;
     }
 
     static POWER_REQUEST: Mutex<Option<isize>> = Mutex::new(None);
     static REASON_UTF16: std::sync::OnceLock<Vec<u16>> = std::sync::OnceLock::new();
     static SUB_KEY_UTF16: std::sync::OnceLock<Vec<u16>> = std::sync::OnceLock::new();
     static VALUE_NAME_UTF16: std::sync::OnceLock<Vec<u16>> = std::sync::OnceLock::new();
+    static SE_SHUTDOWN_NAME_UTF16: std::sync::OnceLock<Vec<u16>> = std::sync::OnceLock::new();
+
+    /// Enables the SeShutdownPrivilege on the current process token to authorize native Win32 shutdown calls.
+    unsafe fn enable_shutdown_privilege() -> bool {
+        let mut token_handle: isize = 0;
+        if OpenProcessToken(
+            GetCurrentProcess(),
+            TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
+            &mut token_handle,
+        ) == 0
+        {
+            return false;
+        }
+
+        let priv_name = SE_SHUTDOWN_NAME_UTF16.get_or_init(|| {
+            "SeShutdownPrivilege\0".encode_utf16().collect()
+        });
+
+        let mut luid = Luid {
+            low_part: 0,
+            high_part: 0,
+        };
+        if LookupPrivilegeValueW(std::ptr::null(), priv_name.as_ptr(), &mut luid) == 0 {
+            CloseHandle(token_handle);
+            return false;
+        }
+
+        let tp = TokenPrivileges {
+            privilege_count: 1,
+            privileges: [LuidAndAttributes {
+                luid,
+                attributes: SE_PRIVILEGE_ENABLED,
+            }],
+        };
+
+        let res = AdjustTokenPrivileges(
+            token_handle,
+            0,
+            &tp,
+            std::mem::size_of::<TokenPrivileges>() as u32,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+        );
+
+        CloseHandle(token_handle);
+        res != 0
+    }
+
 
     /// Prevents Windows from sleeping or suspending while the timer is active.
     /// Combines SetThreadExecutionState with PowerCreateRequest for maximum compatibility.
@@ -264,20 +377,52 @@ mod imp {
         locales
     }
 
-    /// Initiates Windows shutdown with a delay without popping up a console window.
+    /// Initiates Windows shutdown with a delay using native Win32 API, falling back to shutdown CLI.
     pub fn trigger_shutdown(timeout_seconds: u32) {
-        let _ = Command::new("shutdown")
-            .args(["/s", "/t", &timeout_seconds.to_string()])
-            .creation_flags(CREATE_NO_WINDOW)
-            .spawn();
+        let native_success = unsafe {
+            if enable_shutdown_privilege() {
+                InitiateSystemShutdownExW(
+                    std::ptr::null(),
+                    std::ptr::null(),
+                    timeout_seconds,
+                    1, // Force apps closed
+                    0, // Power off (do not reboot)
+                    SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED,
+                ) != 0
+            } else {
+                false
+            }
+        };
+
+        if !native_success {
+            let _ = Command::new("shutdown")
+                .args(["/s", "/t", &timeout_seconds.to_string()])
+                .creation_flags(CREATE_NO_WINDOW)
+                .spawn();
+        }
     }
 
-    /// Aborts any scheduled Windows shutdown completely silently (no console window).
+    /// Aborts any scheduled Windows shutdown using native Win32 API, falling back to shutdown CLI.
     pub fn cancel_shutdown() {
-        let _ = Command::new("shutdown")
-            .args(["/a"])
-            .creation_flags(CREATE_NO_WINDOW)
-            .spawn();
+        let native_success = unsafe {
+            if enable_shutdown_privilege() {
+                if AbortSystemShutdownW(std::ptr::null()) != 0 {
+                    true
+                } else {
+                    // If no shutdown was in progress, consider it cleanly handled without fallback noise
+                    GetLastError() == ERROR_SHUTDOWN_NOT_IN_PROGRESS
+                }
+            } else {
+                false
+            }
+        };
+
+        if !native_success {
+            let _ = Command::new("shutdown")
+                .args(["/a"])
+                .creation_flags(CREATE_NO_WINDOW)
+                .spawn();
+        }
     }
 }
 
@@ -491,7 +636,62 @@ mod imp {
     }
 
     fn execute_linux_shutdown() {
-        // 1. Try systemctl poweroff (standard on systemd-based distributions)
+        // 1. Try D-Bus call to org.freedesktop.login1 via gdbus (standard in Flatpak runtime and GNOME/freedesktop)
+        if Command::new("gdbus")
+            .args([
+                "call",
+                "--system",
+                "--dest",
+                "org.freedesktop.login1",
+                "--object-path",
+                "/org/freedesktop/login1",
+                "--method",
+                "org.freedesktop.login1.Manager.PowerOff",
+                "true",
+            ])
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false)
+        {
+            return;
+        }
+
+        // 2. Try D-Bus call via dbus-send (standard fallback for D-Bus without GLib)
+        if Command::new("dbus-send")
+            .args([
+                "--system",
+                "--print-reply",
+                "--dest=org.freedesktop.login1",
+                "/org/freedesktop/login1",
+                "org.freedesktop.login1.Manager.PowerOff",
+                "boolean:true",
+            ])
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false)
+        {
+            return;
+        }
+
+        // 3. Try busctl (systemd DBus CLI)
+        if Command::new("busctl")
+            .args([
+                "call",
+                "org.freedesktop.login1",
+                "/org/freedesktop/login1",
+                "org.freedesktop.login1.Manager",
+                "PowerOff",
+                "b",
+                "true",
+            ])
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false)
+        {
+            return;
+        }
+
+        // 4. Try systemctl poweroff (standard on host systemd-based distributions)
         if Command::new("systemctl")
             .arg("poweroff")
             .status()
@@ -501,7 +701,7 @@ mod imp {
             return;
         }
 
-        // 2. Try shutdown -h now
+        // 5. Try shutdown -h now
         if Command::new("shutdown")
             .args(["-h", "now"])
             .status()
@@ -511,7 +711,7 @@ mod imp {
             return;
         }
 
-        // 3. Fallback to poweroff
+        // 6. Fallback to poweroff
         let _ = Command::new("poweroff").status();
     }
 
